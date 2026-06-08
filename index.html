@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Тестирование CorpOS</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--blue:#2563eb;--bl:#eff6ff;--green:#16a34a;--gl:#f0fdf4;--gray:#6b7280;--brd:#e5e7eb;--bg:#f9fafb}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:#111;font-size:16px;min-height:100vh}
+.wrap{max-width:560px;margin:0 auto;padding:0 0 88px}
+/* progress */
+.top{position:sticky;top:0;z-index:9;background:#fff;border-bottom:1px solid var(--brd);padding:12px 16px 10px}
+.top-row{display:flex;justify-content:space-between;font-size:13px;color:var(--gray);margin-bottom:8px}
+.bar{height:4px;background:var(--brd);border-radius:2px}
+.fill{height:4px;background:var(--blue);border-radius:2px;transition:width .3s}
+/* card */
+.card{background:#fff;margin:14px;border-radius:14px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.title{font-size:19px;font-weight:700;line-height:1.3;margin-bottom:6px}
+.sub{font-size:14px;color:var(--gray);line-height:1.6;margin-bottom:16px}
+/* task header */
+.tnum{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--blue);margin-bottom:8px}
+/* link button */
+.lbtn{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;background:var(--blue);color:#fff;border-radius:11px;text-decoration:none;font-weight:700;font-size:15px;margin-bottom:14px;border:none;cursor:pointer;width:100%}
+.lbtn:active{opacity:.88}
+.lbtn.sec{background:#fff;color:var(--blue);border:2px solid var(--blue)}
+.lbtn:disabled{opacity:.5;cursor:not-allowed}
+.lbtn.done{background:var(--green);pointer-events:none}
+/* success box */
+.sbox{background:var(--gl);border-left:3px solid var(--green);border-radius:0 10px 10px 0;padding:12px 14px;margin-bottom:16px}
+.sbox-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#166534;margin-bottom:5px}
+.sbox p{font-size:13px;color:#15803d;line-height:1.5}
+.wbox{background:#fffbeb;border-left:3px solid #f59e0b;border-radius:0 10px 10px 0;padding:12px 14px;margin-bottom:16px}
+.wbox p{font-size:13px;color:#92400e;line-height:1.5}
+/* question */
+.qb{margin-bottom:20px}
+.ql{font-size:15px;font-weight:600;margin-bottom:10px;line-height:1.4}
+/* option */
+.opt{display:flex;align-items:flex-start;gap:12px;padding:13px 14px;border:1.5px solid var(--brd);border-radius:10px;margin-bottom:7px;cursor:pointer;background:#fff;transition:border .12s,background .12s}
+.opt.on{border-color:var(--blue);background:var(--bl)}
+.opt input{width:18px;height:18px;margin-top:1px;accent-color:var(--blue);flex-shrink:0}
+.opt-t{font-size:14px;line-height:1.4}
+.opt-s{font-size:12px;color:var(--gray);margin-top:3px}
+/* textarea */
+textarea{width:100%;padding:12px 14px;border:1.5px solid var(--brd);border-radius:10px;font-size:15px;font-family:inherit;resize:vertical;min-height:72px;line-height:1.5}
+textarea:focus{outline:none;border-color:var(--blue)}
+/* time block */
+.tblk{display:flex;flex-direction:column;gap:8px;margin-bottom:4px}
+.tnote{font-size:13px;color:var(--gray);line-height:1.5;margin-top:6px}
+.tok{background:var(--gl);border:1px solid #86efac;border-radius:8px;padding:10px 12px;font-size:13px;color:#166534;font-weight:600}
+/* sus */
+.si{border:1px solid var(--brd);border-radius:10px;padding:14px;margin-bottom:9px}
+.sq{font-size:14px;margin-bottom:9px;line-height:1.4}
+.ss{display:flex;gap:5px}
+.sb{flex:1;padding:11px 2px;border:1.5px solid var(--brd);border-radius:8px;background:#fff;font-size:13px;font-weight:600;cursor:pointer;text-align:center;transition:all .12s}
+.sb.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.sl{display:flex;justify-content:space-between;font-size:11px;color:var(--gray);margin-top:5px}
+/* tlx */
+.ti{margin-bottom:18px}
+.tn{font-size:14px;font-weight:600;margin-bottom:2px}
+.td{font-size:13px;color:var(--gray);margin-bottom:8px;line-height:1.4}
+.tr{display:flex;align-items:center;gap:10px}
+.tr input[type=range]{flex:1;accent-color:var(--blue)}
+.tv{font-size:16px;font-weight:700;min-width:34px;text-align:right;color:var(--blue)}
+/* nav */
+.nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--brd);padding:12px 16px;display:flex;gap:10px;max-width:560px;left:50%;transform:translateX(-50%)}
+.nbk{flex:1;padding:14px;border:1.5px solid var(--brd);border-radius:10px;background:#fff;font-size:15px;cursor:pointer;color:var(--gray);font-family:inherit}
+.nxt{flex:2;padding:14px;border:none;border-radius:10px;background:var(--blue);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+.nxt:disabled{background:#93c5fd;cursor:not-allowed}
+/* results */
+.rc{text-align:center;padding:16px 0 8px}
+.ri{font-size:54px;margin-bottom:10px}
+.rt{font-size:22px;font-weight:800;margin-bottom:8px}
+.rs{font-size:15px;color:var(--gray);line-height:1.6}
+.ck{margin:18px 0}
+.cr{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--brd);font-size:15px}
+.cr:last-child{border-bottom:none}
+.ci{font-size:20px}
+.sent{background:var(--gl);border:1.5px solid #86efac;border-radius:10px;padding:14px;text-align:center;margin-bottom:12px}
+.sent p{font-size:14px;color:#166534;font-weight:600}
+.cpb{background:#fff;border:2px solid var(--blue);border-radius:11px;color:var(--blue);font-size:15px;font-weight:700;padding:14px;width:100%;cursor:pointer;margin-bottom:10px;font-family:inherit}
+.ca{background:#f8fafc;border:1px solid var(--brd);border-radius:10px;padding:12px;font-size:12px;font-family:monospace;white-space:pre-wrap;word-break:break-all;max-height:200px;overflow-y:auto;margin-bottom:10px;line-height:1.6;text-align:left}
+/* mod results */
+.mg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}
+.mb{background:var(--bg);border-radius:10px;padding:12px;text-align:center;border:1px solid var(--brd)}
+.mv{font-size:22px;font-weight:800}
+.mn{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:.03em;margin-top:3px}
+.hr{border:none;border-top:1px solid var(--brd);margin:18px 0}
+.btn-nw{background:var(--bg);border:1.5px solid var(--brd);border-radius:11px;font-size:15px;padding:14px;width:100%;cursor:pointer;font-family:inherit;margin-top:6px}
+.ex-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--gray);margin:16px 0 10px}
+.ex-row{font-size:14px;line-height:1.6;padding:6px 0;border-bottom:1px solid var(--brd)}
+.ex-row:last-child{border-bottom:none}
+.ex-lbl{color:var(--gray)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="top">
+  <div class="top-row"><span id="lbl"></span><span id="cnt"></span></div>
+  <div class="bar"><div class="fill" id="fill" style="width:0%"></div></div>
+</div>
+<div id="root"></div>
+<div class="nav" id="nav" style="display:none">
+  <button class="nbk" id="bk" onclick="back()">← Назад</button>
+  <button class="nxt" id="nx" onclick="next()">Далее →</button>
+</div>
+</div>
+<script>
+// Вставьте ID формы с formspree.io для автосбора данных (оставьте пустым для ручного копирования)
+const FID='mlgkjeae';
+const TEST_METHOD=new URLSearchParams(location.search).get('method')==='moderated'?'moderated':'unmoderated';
+const METHOD_LBL={moderated:'Модерируемое',unmoderated:'Немодерируемое'};
+
+const STEPS=['hi','sc','s1','s2','s3','rs','sus','tlx','open','done'];
+const TASK_URLS={s1:'https://corp-os.vercel.app/onboarding',s2:'https://corp-os.vercel.app',s3:'https://corp-os.vercel.app/task'};
+const SQ=[
+  {id:'u1',t:'Я хотел(а) бы пользоваться этой системой регулярно',p:1},
+  {id:'u2',t:'Система показалась мне излишне сложной',p:0},
+  {id:'u3',t:'Мне было легко пользоваться системой',p:1},
+  {id:'u4',t:'Думаю, мне понадобилась бы помощь специалиста для работы с системой',p:0},
+  {id:'u5',t:'Различные функции системы хорошо связаны между собой',p:1},
+  {id:'u6',t:'В системе слишком много несоответствий',p:0},
+  {id:'u7',t:'Большинство людей быстро освоят эту систему',p:1},
+  {id:'u8',t:'Система показалась мне громоздкой',p:0},
+  {id:'u9',t:'Я чувствовал(а) себя уверенно при работе с системой',p:1},
+  {id:'u10',t:'Мне пришлось многому учиться, чтобы начать работать с системой',p:0}
+];
+const TQ=[
+  {id:'t1',n:'Умственная нагрузка',d:'Насколько интенсивной была умственная работа?'},
+  {id:'t2',n:'Физическая нагрузка',d:'Насколько активно нажимали, прокручивали, кликали?'},
+  {id:'t3',n:'Временная нагрузка',d:'Ощущали ли нехватку времени или спешку?'},
+  {id:'t4',n:'Неудовлетворённость',d:'Насколько недовольны тем, как справились?'},
+  {id:'t5',n:'Усилие',d:'Насколько старались для выполнения заданий?'},
+  {id:'t6',n:'Фрустрация',d:'Насколько ощущали раздражение или стресс?'}
+];
+const STRAT_LBL={search:'через строку поиска',menu:'сначала через меню или экран',menu_then_search:'сначала через меню, потом через поиск',other:'другим способом'};
+const RESTRICT_LBL={'0':'нет','1':'иногда','2':'часто'};
+const PATH_LBL={'0':'нет','1':'1–2 раза','2':'3 и более','9':'не помню'};
+const HP_LBL={'0':'нет','1':'один раз','2':'несколько раз'};
+const TIMER_WARN='Каждое задание открывается в новой вкладке. После выполнения обязательно вернитесь в форму и нажмите кнопку «Я завершил(а) задание», иначе время не будет зафиксировано корректно.';
+const TIMER_HINT='Когда закончите, вернитесь в форму и нажмите «Я завершил(а) задание».';
+const MODE_LBL={basic:'Базовый',standard:'Стандартный',expert:'Экспертный',unknown:'Не понял(а) / не заметил(а)'};
+const PEEK_NOTE='Если после выполнения вы захотите просто посмотреть интерфейс, сначала нажмите «Я завершил(а) задание», а потом открывайте систему снова.';
+
+const D={
+  sc:{q1:null,q2:null,q3:null},
+  s1:{st:null,mode:null,hp:null,err:null,rec:null,path:null,t_start:null,t_end:null,t_sec:null,cm:''},
+  s2:{st:null,hp:null,err:null,rec:null,path:null,strategy:null,strategy_comment:'',saw_search:null,t_start:null,t_end:null,t_sec:null,cm:''},
+  s3:{st:null,hp:null,err:null,rec:null,path:null,t_start:null,t_end:null,t_sec:null,cm:''},
+  restrict:null,restrict_comment:'',
+  sus:{},
+  tlx:{t1:20,t2:10,t3:15,t4:20,t5:30,t6:15},
+  bad:'',good:''
+};
+let step=0,sent=false;
+
+const _saved=localStorage.getItem('corpos_test');
+if(_saved){try{const s=JSON.parse(_saved);Object.assign(D,s.D);step=s.step||0;}catch(e){}}
+
+const grp=()=>{const v=[D.sc.q1,D.sc.q2,D.sc.q3].filter(Boolean),c={A:0,B:0,C:0};v.forEach(x=>c[x]++);return c.A>=2?'A':c.C>=2?'C':'B';};
+const sus=()=>{let t=0;SQ.forEach(q=>{const v=parseInt(D.sus[q.id]||3);t+=q.p?(v-1):(5-v);});return Math.round(t*2.5);};
+const tlx=()=>Math.round(Object.values(D.tlx).map(Number).reduce((a,b)=>a+b)/6);
+const tsr=()=>Math.round(['s1','s2','s3'].map(k=>D[k].st==='1'?1:D[k].st==='0.5'?0.5:0).reduce((a,b)=>a+b)/3*100);
+const slbl=s=>s>=85?'Отлично':s>=71?'Хорошо':s>=58?'Удовлетворительно':s>=38?'Ниже среднего':'Требует доработки';
+const errCount=()=>['s1','s2','s3'].filter(k=>D[k].err==='1').length;
+const recCount=()=>['s1','s2','s3'].filter(k=>D[k].err==='1'&&D[k].rec==='1').length;
+const calcRR=()=>{const e=errCount();return e>0?Math.round(recCount()/e*100):null;};
+const calcPathScore=()=>{const v=['s1','s2','s3'].map(k=>D[k].path).filter(p=>p&&p!=='9').map(Number);return v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length*100)/100:null;};
+const fmtSec=s=>{if(s==null)return'—';if(s<60)return s+' сек';const m=Math.floor(s/60),r=s%60;return m+' мин'+(r?' '+r+' сек':'');};
+const stLbl=k=>D[k].st==='1'?'Успех':D[k].st==='0.5'?'Частично':'Неуспех';
+const errLbl=k=>D[k].err==='1'?'да':'нет';
+const recLbl=k=>{if(D[k].err!=='1')return'—';return D[k].rec==='1'?'да':'нет';};
+
+function scenOk(k){
+  const s=D[k];
+  if(!s.st||s.hp==null||s.err==null||s.path==null||s.t_sec==null)return false;
+  if(s.err==='1'&&s.rec==null)return false;
+  if(k==='s1'&&!s.mode)return false;
+  if(k==='s2'&&!s.strategy)return false;
+  return true;
+}
+
+function ok(){
+  const s=STEPS[step];
+  if(s==='hi')return true;
+  if(s==='sc')return D.sc.q1&&D.sc.q2&&D.sc.q3;
+  if(s==='s1'||s==='s2'||s==='s3')return scenOk(s);
+  if(s==='rs')return D.restrict!=null;
+  if(s==='sus')return SQ.every(q=>D.sus[q.id]);
+  return true;
+}
+function next(){if(!ok())return;step<STEPS.length-1&&(step++,render(),scrollTo(0,0));}
+function back(){step>0&&(step--,render(),scrollTo(0,0));}
+
+function startTask(key){
+  if(D[key].t_sec!=null)return;
+  window.open(TASK_URLS[key],'_blank');
+  if(D[key].t_start==null){
+    D[key].t_start=Date.now();
+    D[key].t_end=null;
+    D[key].t_sec=null;
+  }
+  render();
+}
+function restartTask(key){
+  if(!confirm('Перезапустить задание? Текущее время будет сброшено.'))return;
+  D[key].t_start=Date.now();
+  D[key].t_end=null;
+  D[key].t_sec=null;
+  window.open(TASK_URLS[key],'_blank');
+  render();
+}
+function openNoTimer(key){
+  window.open(TASK_URLS[key],'_blank');
+}
+function endTask(key){
+  D[key].t_end=Date.now();
+  if(D[key].t_start)D[key].t_sec=Math.round((D[key].t_end-D[key].t_start)/1000);
+  render();
+}
+
+function radio(path,val,text,sub){
+  const parts=path.split('.');
+  const cur=parts.length>1?D[parts[0]][parts[1]]:D[parts[0]];
+  const sel=cur===val;
+  return`<label class="opt${sel?' on':''}" onclick="">
+    <input type="radio" name="${path}" value="${val}" onchange="${parts.length>1?`D.${parts[0]}.${parts[1]}`:`D.${parts[0]}`}='${val}';render()" ${sel?'checked':''}>
+    <span><span class="opt-t">${text}</span>${sub?`<br><span class="opt-s">${sub}</span>`:''}</span>
+  </label>`;
+}
+
+function timeField(key){
+  const started=D[key].t_start!=null,done=D[key].t_sec!=null;
+  let btns='';
+  if(!done){
+    const openLbl=started?'↗ Вернуться к заданию':'▶ Открыть задание и начать';
+    btns=`<button class="lbtn" onclick="endTask('${key}')" ${!started?'disabled':''}>✓ Я завершил(а) задание</button>
+      <button class="lbtn sec" onclick="startTask('${key}')">${openLbl}</button>`;
+    if(started)btns+=`<button class="btn-nw" onclick="restartTask('${key}')">↺ Перезапустить задание</button>`;
+  }else{
+    btns=`<div class="tok">Время зафиксировано: ${fmtSec(D[key].t_sec)}</div>
+      <button class="btn-nw" onclick="openNoTimer('${key}')">🔗 Открыть ещё раз без таймера</button>
+      <button class="btn-nw" onclick="restartTask('${key}')">↺ Перезапустить задание</button>`;
+  }
+  return`<div class="qb"><div class="ql">Время выполнения</div>
+    <div class="tblk">${btns}</div>
+    ${!done?`<div class="tnote">${TIMER_HINT}</div>`:''}
+  </div>`;
+}
+
+function scenWarn(){
+  return`<div class="wbox"><p>${TIMER_WARN}</p><p style="margin-top:8px">${PEEK_NOTE}</p></div>`;
+}
+
+function modeField(n){
+  return`<div class="qb"><div class="ql">${n}. Какой режим в итоге выбрала или предложила система?</div>
+    ${radio('s1.mode','basic','Базовый')}
+    ${radio('s1.mode','standard','Стандартный')}
+    ${radio('s1.mode','expert','Экспертный')}
+    ${radio('s1.mode','unknown','Не понял(а) / не заметил(а)')}
+  </div>`;
+}
+
+function hpField(key,n){
+  return`<div class="qb"><div class="ql">${n}. Во время выполнения хотелось обратиться за помощью или подсказкой?</div>
+    ${radio(key+'.hp','0','Нет')}
+    ${radio(key+'.hp','1','Да, один раз')}
+    ${radio(key+'.hp','2','Да, несколько раз')}
+  </div>`;
+}
+
+function errRadio(key,val,text){
+  const sel=D[key].err===val;
+  return`<label class="opt${sel?' on':''}">
+    <input type="radio" name="${key}.err" value="${val}" onchange="D.${key}.err='${val}';if('${val}'==='0')D.${key}.rec=null;render()" ${sel?'checked':''}>
+    <span><span class="opt-t">${text}</span></span>
+  </label>`;
+}
+function errField(key,n){
+  let h=`<div class="qb"><div class="ql">${n}. Возникал ли момент, когда вы сделали не то, что планировали, или запутались?</div>
+    ${errRadio(key,'0','Нет, такого не было')}
+    ${errRadio(key,'1','Да, был такой момент')}
+  </div>`;
+  if(D[key].err==='1'){
+    h+=`<div class="qb"><div class="ql">Удалось ли после этого продолжить самостоятельно?</div>
+      ${radio(key+'.rec','1','Да, продолжил(а) самостоятельно')}
+      ${radio(key+'.rec','0','Нет, без помощи было бы сложно или невозможно')}
+    </div>`;
+  }
+  return h;
+}
+
+function pathField(key,n){
+  return`<div class="qb"><div class="ql">${n}. Пришлось ли делать лишние переходы или возвращаться назад, прежде чем завершить задание?</div>
+    ${radio(key+'.path','0','Нет')}
+    ${radio(key+'.path','1','Да, 1–2 раза')}
+    ${radio(key+'.path','2','Да, 3 и более раз')}
+    ${radio(key+'.path','9','Не помню')}
+  </div>`;
+}
+
+function strategyField(n){
+  let h=`<div class="qb"><div class="ql">${n}. Как вы в основном искали нужную информацию?</div>
+    ${radio('s2.strategy','search','Сразу через строку поиска')}
+    ${radio('s2.strategy','menu','Сначала пытался(ась) искать через меню или экран')}
+    ${radio('s2.strategy','menu_then_search','Сначала через меню, потом через поиск')}
+    ${radio('s2.strategy','other','Другим способом')}
+  </div>
+  <div class="qb"><div class="ql">${n+1}. Вы видели строку поиска до того, как начали выполнять задание?</div>
+    ${radio('s2.saw_search','yes','Да, видел(а) сразу')}
+    ${radio('s2.saw_search','no','Нет, заметил(а) только в процессе или не заметил(а) вовсе')}
+  </div>`;
+  if(D.s2.strategy==='other'){
+    h+=`<div class="qb"><div class="ql">Опишите, как именно</div>
+      <textarea placeholder="Кратко опишите ваш способ..." oninput="D.s2.strategy_comment=this.value">${D.s2.strategy_comment}</textarea>
+    </div>`;
+  }
+  return h;
+}
+
+function cmField(key,n){
+  return`<div class="qb"><div class="ql">${n}. Что было самым сложным в этом задании?</div>
+    <textarea placeholder="Комментарий" oninput="D.${key}.cm=this.value">${D[key].cm}</textarea>
+  </div>`;
+}
+
+function scenFields(key,start){
+  let n=start;
+  return`${hpField(key,n++)}${errField(key,n++)}${pathField(key,n++)}${cmField(key,n++)}`;
+}
+
+async function autoSend(payload){
+  if(!FID)return false;
+  try{const r=await fetch(`https://formspree.io/f/${FID}`,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(payload)});return r.ok;}
+  catch{return false;}
+}
+
+function scenDetail(k){
+  const s=D[k],n=k==='s1'?'С1':k==='s2'?'С2':'С3';
+  let line=`${n}: ${stLbl(k)}, время:${fmtSec(s.t_sec)}, подсказка:${HP_LBL[s.hp]||'—'}, затруднение:${errLbl(k)}, продолжил сам:${recLbl(k)}, лишние переходы:${PATH_LBL[s.path]||'—'}`;
+  if(k==='s1')line+=`, режим:${MODE_LBL[s.mode]||'—'}`;
+  if(k==='s2')line+=`, стратегия:${STRAT_LBL[s.strategy]||'—'}${s.strategy==='other'&&s.strategy_comment?' ('+s.strategy_comment+')':''}`;
+  if(s.cm)line+=`, комментарий:"${s.cm}"`;
+  return line;
+}
+
+function payload(){
+  const g=grp(),s=sus(),t=tlx(),r=tsr(),ec=errCount(),rc=recCount(),rr=calcRR(),ps=calcPathScore();
+  const p={
+    id:new Date().toISOString(),
+    method:TEST_METHOD,
+    группа:g,
+    SUS:s,
+    TLX:t,
+    TSR:r+'%',
+    err_count:ec,
+    rec_count:rc,
+    RR:rr!=null?rr+'%':null,
+    path_score:ps,
+    restrict:D.restrict,
+    restrict_comment:D.restrict_comment||'',
+    s1:{st:D.s1.st,mode:D.s1.mode,hp:D.s1.hp,err:D.s1.err,rec:D.s1.err==='1'?D.s1.rec:null,path:D.s1.path,t_start:D.s1.t_start,t_end:D.s1.t_end,t_sec:D.s1.t_sec,cm:D.s1.cm},
+    режим_онбординга:MODE_LBL[D.s1.mode]||null,
+    s2:{st:D.s2.st,hp:D.s2.hp,err:D.s2.err,rec:D.s2.err==='1'?D.s2.rec:null,path:D.s2.path,strategy:D.s2.strategy,strategy_comment:D.s2.strategy_comment,t_start:D.s2.t_start,t_end:D.s2.t_end,t_sec:D.s2.t_sec,cm:D.s2.cm},
+    s3:{st:D.s3.st,hp:D.s3.hp,err:D.s3.err,rec:D.s3.err==='1'?D.s3.rec:null,path:D.s3.path,t_start:D.s3.t_start,t_end:D.s3.t_end,t_sec:D.s3.t_sec,cm:D.s3.cm},
+    SUS_детально:SQ.map((q,i)=>`${i+1}:${D.sus[q.id]||'?'}`).join(' '),
+    TLX_детально:TQ.map(q=>`${q.n.split(' ')[0]}:${D.tlx[q.id]}`).join(' '),
+    трудности:D.bad,
+    понравилось:D.good,
+    скрининг:`${D.sc.q1}/${D.sc.q2}/${D.sc.q3}`
+  };
+  return p;
+}
+
+function copyTxt(){
+  const p=payload(),g=p.группа,s=p.SUS,t=p.TLX,r=p.TSR;
+  const lines=[
+    `ID: ${p.id}`,
+    `Формат теста: ${METHOD_LBL[TEST_METHOD]}`,
+    `Группа: ${g}`,
+    '',
+    scenDetail('s1'),
+    scenDetail('s2'),
+    scenDetail('s3'),
+    '',
+    `SUS: ${s} (${slbl(s)})`,
+    `NASA-TLX: ${t}`,
+    `TSR: ${r}`,
+    p.RR!=null?`RR: ${p.RR} (затруднений: ${p.err_count}, самостоятельно: ${p.rec_count})`:`RR: недостаточно данных (затруднений не было)`,
+    `Средний уровень лишних переходов: ${p.path_score!=null?p.path_score:'—'}`,
+    `Ограниченность интерфейса: ${RESTRICT_LBL[p.restrict]||'—'}${p.restrict_comment?' — '+p.restrict_comment:''}`,
+    '',
+    `SUS детально: ${p.SUS_детально}`,
+    `TLX детально: ${p.TLX_детально}`,
+    '',
+    p.трудности?`Трудности: ${p.трудности}`:'',
+    p.понравилось?`Понравилось: ${p.понравилось}`:''
+  ].filter(Boolean);
+  return lines.join('\n');
+}
+
+function resultsBlock(){
+  const g=grp(),s=sus(),t=tlx(),r=tsr(),ec=errCount(),rc=recCount(),rr=calcRR(),ps=calcPathScore();
+  const strat=D.s2.strategy?STRAT_LBL[D.s2.strategy]:'—';
+  const restr=RESTRICT_LBL[D.restrict]||'—';
+  return`<div class="mg">
+    <div class="mb"><div class="mv">${s}</div><div class="mn">SUS</div></div>
+    <div class="mb"><div class="mv">${t}</div><div class="mn">NASA-TLX</div></div>
+    <div class="mb"><div class="mv">${r}%</div><div class="mn">TSR</div></div>
+  </div>
+  <div class="ex-title">Дополнительные показатели</div>
+  <div class="ex-row"><span class="ex-lbl">Группа:</span> ${g}</div>
+  <div class="ex-row"><span class="ex-lbl">Режим онбординга:</span> ${MODE_LBL[D.s1.mode]||'—'}</div>
+  <div class="ex-row"><span class="ex-lbl">Затруднения в сценариях:</span> ${ec}</div>
+  <div class="ex-row"><span class="ex-lbl">Самостоятельное продолжение:</span> ${rc}</div>
+  <div class="ex-row"><span class="ex-lbl">RR:</span> ${rr!=null?rr+'%':'недостаточно данных'}</div>
+  <div class="ex-row"><span class="ex-lbl">Поиск выполнялся в основном:</span> ${strat}</div>
+  <div class="ex-row"><span class="ex-lbl">Признаки избыточного ограничения:</span> ${restr}</div>
+  ${ps!=null?`<div class="ex-row"><span class="ex-lbl">Средний уровень лишних переходов:</span> ${ps}</div>`:''}
+  <div class="ex-row"><span class="ex-lbl">Время по сценариям:</span> С1 ${fmtSec(D.s1.t_sec)}, С2 ${fmtSec(D.s2.t_sec)}, С3 ${fmtSec(D.s3.t_sec)}</div>`;
+}
+
+function render(){
+  const s=STEPS[step],pct=Math.round(step/(STEPS.length-1)*100);
+  document.getElementById('fill').style.width=pct+'%';
+  const lbls={hi:'',sc:'О вас',s1:'Задание 1',s2:'Задание 2',s3:'Задание 3',rs:'Впечатления',sus:'Анкета',tlx:'Нагрузка',open:'Комментарии',done:''};
+  document.getElementById('lbl').textContent=lbls[s]||'';
+  document.getElementById('cnt').textContent=step>0&&s!=='done'?step+' / '+(STEPS.length-2):'';
+  const nav=document.getElementById('nav');
+  if(s==='hi'||s==='done'){nav.style.display='none';}
+  else{nav.style.display='flex';document.getElementById('bk').style.display=step>1?'':'none';
+    const nx=document.getElementById('nx');nx.disabled=!ok();nx.textContent=s==='open'?'Завершить →':'Далее →';}
+  document.getElementById('root').innerHTML=body(s);
+  document.querySelectorAll('input[type=range]').forEach(r=>{
+    r.oninput=function(){D.tlx[this.dataset.id]=this.value;document.getElementById('v'+this.dataset.id).textContent=this.value;};
+  });
+  localStorage.setItem('corpos_test',JSON.stringify({D,step}));
+}
+
+function body(s){
+  if(s==='hi')return`<div class="card">
+    <div class="title">Тестирование CorpOS</div>
+    <div class="sub">Мы проверяем, насколько удобна система. Нет правильных или неправильных ответов — любой результат помогает нам улучшить продукт. Это займёт около 15 минут.</div>
+    <button class="lbtn" onclick="step=1;render();scrollTo(0,0)">Начать →</button>
+  </div>`;
+
+  if(s==='sc')return`<div class="card">
+    <div class="title">Немного о вас</div>
+    <div class="sub">Три вопроса о том, как вы обычно работаете с программами и приложениями.</div>
+    <div class="qb"><div class="ql">Когда вы открываете новую программу или приложение, что вам обычно удобнее?</div>
+      ${radio('sc.q1','A','Когда есть понятные подсказки и пошаговый маршрут')}
+      ${radio('sc.q1','B','Когда можно самому попробовать основные действия')}
+      ${radio('sc.q1','C','Когда можно сразу перейти к поиску, быстрым действиям или настройке')}
+    </div>
+    <div class="qb"><div class="ql">Если сразу не понятно, как сделать нужное, что вы скорее сделаете?</div>
+      ${radio('sc.q2','A','Поищу подсказку или более понятный путь')}
+      ${radio('sc.q2','B','Попробую ещё несколько очевидных вариантов')}
+      ${radio('sc.q2','C','Сменю способ: поиск, команда, другой быстрый маршрут')}
+    </div>
+    <div class="qb"><div class="ql">Как вы обычно осваиваете новую программу или приложение?</div>
+      ${radio('sc.q3','A','Постепенно, когда всё показано понятно и последовательно')}
+      ${radio('sc.q3','B','По ходу работы, через практику')}
+      ${radio('sc.q3','C','Быстро, если вижу общую логику системы')}
+    </div>
+  </div>`;
+
+  if(s==='s1')return`<div class="card">
+    <div class="tnum">Задание 1 из 3</div>
+    <div class="title">Онбординг</div>
+    <div class="sbox"><div class="sbox-title">Что нужно сделать</div>
+      <p>Пройдите первоначальную настройку системы так, как если бы вы только что получили доступ. Задание завершено, когда вы нажмёте кнопку «Перейти к работе».</p>
+    </div>
+    ${scenWarn()}
+    ${timeField('s1')}
+    <div class="qb"><div class="ql">1. Как прошло?</div>
+      ${radio('s1.st','1','✅ Дошёл(а) до главного экрана самостоятельно')}
+      ${radio('s1.st','0.5','⚠️ Дошёл(а), но были трудности или пришлось угадывать')}
+      ${radio('s1.st','0','❌ Не удалось завершить онбординг')}
+    </div>
+    ${modeField(2)}
+    ${scenFields('s1',3)}
+  </div>`;
+
+  if(s==='s2')return`<div class="card">
+    <div class="tnum">Задание 2 из 3</div>
+    <div class="title">Поиск информации</div>
+    <div class="sbox"><div class="sbox-title">Что нужно сделать</div>
+      <p>Найдите в системе, где содержится информация о <strong>компенсациях сотрудникам компании</strong>. Задание выполнено, когда вы нашли и открыли нужный документ или раздел.</p>
+    </div>
+    ${scenWarn()}
+    ${timeField('s2')}
+    <div class="qb"><div class="ql">1. Как прошло?</div>
+      ${radio('s2.st','1','✅ Нашёл(а) нужную информацию')}
+      ${radio('s2.st','0.5','⚠️ Нашёл(а) что-то похожее, но не уверен(а)')}
+      ${radio('s2.st','0','❌ Не удалось найти')}
+    </div>
+    ${strategyField(2)}
+    ${scenFields('s2',3)}
+  </div>`;
+
+  if(s==='s3')return`<div class="card">
+    <div class="tnum">Задание 3 из 3</div>
+    <div class="title">Создание заявки</div>
+    <div class="sbox"><div class="sbox-title">Что нужно сделать</div>
+      <p>Откроется раздел создания заявки. Используйте файлы из папки <strong>«ООО Рога и Копыта»</strong> — выберите любые доступные. Задание выполнено, когда вы увидели подтверждение, что заявка отправлена.</p>
+    </div>
+    ${scenWarn()}
+    ${timeField('s3')}
+    <div class="qb"><div class="ql">1. Как прошло?</div>
+      ${radio('s3.st','1','✅ Заявка отправлена, получил(а) подтверждение')}
+      ${radio('s3.st','0.5','⚠️ Начал(а), но не дошёл(а) до отправки')}
+      ${radio('s3.st','0','❌ Не нашёл(а) с чего начать или бросил(а)')}
+    </div>
+    ${scenFields('s3',2)}
+  </div>`;
+
+  if(s==='rs')return`<div class="card">
+    <div class="title">Общие впечатления о работе</div>
+    <div class="sub">Ещё один вопрос обо всех трёх заданиях вместе.</div>
+    <div class="qb"><div class="ql">Были ли моменты, когда интерфейс казался вам слишком пошаговым или избыточно ограниченным?</div>
+      ${radio('restrict','0','Нет')}
+      ${radio('restrict','1','Да, иногда')}
+      ${radio('restrict','2','Да, часто')}
+    </div>
+    ${D.restrict&&D.restrict!=='0'?`<div class="qb"><div class="ql">Если да, кратко опишите (необязательно)</div>
+      <textarea placeholder="В каких ситуациях это ощущалось?" oninput="D.restrict_comment=this.value">${D.restrict_comment}</textarea>
+    </div>`:''}
+  </div>`;
+
+  if(s==='sus')return`<div class="card">
+    <div class="title">Оцените систему</div>
+    <div class="sub">По каждому утверждению выберите от 1 (совершенно не согласен) до 5 (полностью согласен).</div>
+    ${SQ.map((q,i)=>`<div class="si">
+      <div class="sq">${i+1}. ${q.t}</div>
+      <div class="ss">${[1,2,3,4,5].map(v=>`<button class="sb${D.sus[q.id]==v?' on':''}" onclick="D.sus['${q.id}']=${v};render()">${v}</button>`).join('')}</div>
+      <div class="sl"><span>Не согласен</span><span>Согласен</span></div>
+    </div>`).join('')}
+  </div>`;
+
+  if(s==='tlx')return`<div class="card">
+    <div class="title">Оцените нагрузку</div>
+    <div class="sub">Вспомните ощущения во время всех трёх заданий. Шкала от 0 до 100.</div>
+    ${TQ.map(q=>`<div class="ti">
+      <div class="tn">${q.n}</div>
+      <div class="td">${q.d}</div>
+      <div class="tr">
+        <span style="font-size:12px;color:var(--gray)">0</span>
+        <input type="range" min="0" max="100" step="5" value="${D.tlx[q.id]}" data-id="${q.id}">
+        <span style="font-size:12px;color:var(--gray)">100</span>
+        <span class="tv" id="v${q.id}">${D.tlx[q.id]}</span>
+      </div>
+    </div>`).join('')}
+  </div>`;
+
+  if(s==='open')return`<div class="card">
+    <div class="title">Ваши впечатления</div>
+    <div class="sub">Напишите свободно — это самое ценное для нас. Оба поля необязательны.</div>
+    <div class="qb"><div class="ql">Что было самым непонятным или неудобным?</div>
+      <textarea placeholder="Опишите момент, где было трудно..." oninput="D.bad=this.value">${D.bad}</textarea>
+    </div>
+    <div class="qb"><div class="ql">Что понравилось или удивило приятно?</div>
+      <textarea placeholder="Что сработало лучше, чем ожидали?" oninput="D.good=this.value">${D.good}</textarea>
+    </div>
+  </div>`;
+
+  if(s==='done'){
+    if(!sent){sent=true;autoSend(payload()).then(ok=>{
+      if(ok)localStorage.removeItem('corpos_test');
+      const el=document.getElementById('st');if(!el)return;
+      el.innerHTML=ok
+        ?`<div class="sent"><p>✅ Ваши ответы получены. Спасибо!</p></div>`
+        :`<div style="margin-bottom:12px">
+           <div class="ql" style="margin-bottom:6px">Скопируйте и отправьте нам:</div>
+           <div class="ca" id="cb">${copyTxt()}</div>
+           <button class="cpb" onclick="cp()">📋 Скопировать ответы</button>
+         </div>`;
+    });}
+    return`<div class="card">
+      <div class="rc">
+        <div class="ri">🙏</div>
+        <div class="rt">Спасибо большое!</div>
+        <div class="rs">Ваши ответы помогут сделать систему удобнее.</div>
+      </div>
+      ${TEST_METHOD==='moderated'?resultsBlock()+`<hr class="hr"><div class="ck">
+        <div class="cr"><span class="ci">✅</span><span>Три задания выполнены</span></div>
+        <div class="cr"><span class="ci">✅</span><span>Анкета заполнена</span></div>
+        <div class="cr"><span class="ci">✅</span><span>Оценка нагрузки записана</span></div>
+      </div>`:''}
+      <div id="st"><div style="text-align:center;padding:16px;color:var(--gray);font-size:14px">Отправляем…</div></div>
+    </div>`;
+  }
+}
+
+function cp(){
+  const t=document.getElementById('cb')?.textContent||copyTxt();
+  navigator.clipboard.writeText(t).then(()=>{const b=event.target;b.textContent='✓ Скопировано!';b.style.background='var(--green)';b.style.color='#fff';setTimeout(()=>{b.textContent='📋 Скопировать ответы';b.style.background='';b.style.color='';},2500);});
+}
+render();
+</script>
+</body>
+</html>
