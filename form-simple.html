@@ -467,7 +467,7 @@ function body(s){
     <div class="tnum">Задание 1 из 3</div>
     <div class="title">Онбординг</div>
     <div class="sbox"><div class="sbox-title">Что нужно сделать</div>
-      <p>Пройдите первоначальную настройку системы так, как если бы вы только что получили доступ. Задание завершено, когда вы нажмёте кнопку «Перейти к работе».</p>
+      <p>Пройдите первоначальную настройку системы так, как если бы вы только что получили доступ. Задание завершено, когда вы нажмёте кнопку «Перейти к работе» (или «Начать работу»).</p>
     </div>
     ${scenWarn()}
     ${timeField('s1')}
@@ -538,7 +538,7 @@ function body(s){
 
   if(s==='tlx')return`<div class="card">
     <div class="title">Оцените нагрузку</div>
-    <div class="sub">Вспомните ощущения во время всех трёх заданий. Шкала от 0 до 100.</div>
+    <div class="sub">Вспомните ощущения во время всех трёх заданий. Шкала от 0 до 100 </br>(0 — совсем нет, 100 — максимально).</div>
     ${TQ.map(q=>`<div class="ti">
       <div class="tn">${q.n}</div>
       <div class="td">${q.d}</div>
@@ -594,6 +594,8 @@ function cp(){
   const t=document.getElementById('cb')?.textContent||copyTxt();
   navigator.clipboard.writeText(t).then(()=>{const b=event.target;b.textContent='✓ Скопировано!';b.style.background='var(--green)';b.style.color='#fff';setTimeout(()=>{b.textContent='📋 Скопировать ответы';b.style.background='';b.style.color='';},2500);});
 }
+const _isMobile=/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&window.innerWidth<900);
+if(_isMobile){alert('Пожалуйста, проходите тестирование с компьютера или ноутбука.');}
 render();
 </script>
 </body>
