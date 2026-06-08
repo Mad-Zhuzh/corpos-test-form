@@ -594,6 +594,8 @@ function cp(){
   const t=document.getElementById('cb')?.textContent||copyTxt();
   navigator.clipboard.writeText(t).then(()=>{const b=event.target;b.textContent='✓ Скопировано!';b.style.background='var(--green)';b.style.color='#fff';setTimeout(()=>{b.textContent='📋 Скопировать ответы';b.style.background='';b.style.color='';},2500);});
 }
+const _isMobile=('ontouchstart' in window||navigator.maxTouchPoints>0)&&window.innerWidth<1024;
+if(_isMobile){alert('Пожалуйста, проходите тестирование с компьютера или ноутбука.');}
 render();
 </script>
 </body>
